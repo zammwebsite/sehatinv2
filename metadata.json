@@ -1,0 +1,7 @@
+{
+  "name": "Sehatin v2",
+  "description": "Sehatin v2 adalah aplikasi kesehatan digital cerdas yang menggabungkan teknologi AI, Supabase, dan Google Maps API untuk membantu pengguna memantau kesehatan, berkonsultasi dengan AI medis, serta menemukan fasilitas kesehatan terdekat secara real-time.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
