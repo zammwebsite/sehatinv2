@@ -26,7 +26,7 @@ const HealthCheckPage: React.FC = () => {
       
       // Save to health_logs
       if (user) {
-        await supabase.db.from('health_logs').insert({
+        await supabase.from('health_logs').insert({
           user_id: user.id,
           camera_result: symptoms, // Store symptoms here as "camera_result" for simplicity
           ai_feedback: feedback,

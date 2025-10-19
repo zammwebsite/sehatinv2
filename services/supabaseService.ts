@@ -1,25 +1,58 @@
-import { createClient } from '@supabase/supabase-js';
 
-// Variabel ini akan diambil dari pengaturan environment di Vercel saat deploy.
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// To prevent the app from crashing when environment variables are not set,
-// we'll use placeholder values and log a warning. The app will load but Supabase
-// functionality will be disabled until the variables are set.
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn(
-    'Supabase URL and/or Anon Key are not set in environment variables. ' +
-    'The app will use placeholder values, and Supabase features will not work. ' +
-    'Please set SUPABASE_URL and SUPABASE_ANON_KEY for full functionality.'
+// --- PENTING: Ganti dengan kredensial Supabase Anda ---
+// Anda bisa mendapatkan URL dan Kunci Anon ini dari dashboard proyek Supabase Anda
+// di bawah Pengaturan > API.
+const supabaseUrl = 'GANTI_DENGAN_URL_SUPABASE_ANDA';
+const supabaseAnonKey = 'GANTI_DENGAN_KUNCI_ANON_SUPABASE_ANDA';
+
+let supabase: SupabaseClient;
+
+const areCredentialsMissing = supabaseUrl.startsWith('GANTI_DENGAN') || supabaseAnonKey.startsWith('GANTI_DENGAN');
+
+if (areCredentialsMissing) {
+  // Tampilkan pesan error yang jelas di konsol developer
+  console.error(
+    '===================================================\n' +
+    'ERROR: KREDENSIAL SUPABASE TIDAK DITEMUKAN!\n' +
+    '===================================================\n' +
+    'Aplikasi ini tidak akan dapat terhubung ke database.\n' +
+    'Fitur seperti login, pendaftaran, riwayat chat, dan cek kesehatan akan GAGAL.\n\n' +
+    'Untuk memperbaikinya:\n' +
+    '1. Buka file `services/supabaseService.ts`.\n' +
+    '2. Ganti placeholder `GANTI_DENGAN_URL_SUPABASE_ANDA` dengan URL Supabase Anda.\n' +
+    '3. Ganti placeholder `GANTI_DENGAN_KUNCI_ANON_SUPABASE_ANDA` dengan Kunci Anon Supabase Anda.\n' +
+    '==================================================='
   );
+
+  // Buat mock client untuk mencegah aplikasi crash dan memberikan feedback error di UI
+  const errorMessage = { message: 'Supabase tidak dikonfigurasi. Mohon periksa file services/supabaseService.ts' };
+  
+  const mockQueryBuilder: any = {
+    select: () => mockQueryBuilder,
+    insert: () => Promise.resolve({ error: errorMessage, data: null }),
+    eq: () => mockQueryBuilder,
+    order: () => mockQueryBuilder,
+    // Buat builder bisa di-'await' untuk query select, kembalikan data kosong
+    then: (resolve: (value: any) => void) => resolve({ data: [], error: null }),
+  };
+
+  supabase = {
+    auth: {
+      signInWithPassword: () => Promise.resolve({ data: { user: null, session: null }, error: errorMessage }),
+      signUp: () => Promise.resolve({ data: { user: null, session: null }, error: errorMessage }),
+      signOut: () => Promise.resolve({ error: null }),
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      updateUser: () => Promise.resolve({ data: { user: null }, error: errorMessage }),
+    },
+    from: () => mockQueryBuilder,
+  } as any;
+
+} else {
+  // Inisialisasi klien Supabase yang sesungguhnya jika kredensial ada
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
 }
 
-// Inisialisasi dan ekspor klien Supabase
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder.anon.key'
-);
-
-// Tipe data untuk event autentikasi sekarang dapat diimpor langsung 
-// dari '@supabase/supabase-js' di file yang membutuhkannya, seperti di useAuth.tsx.
+export { supabase };

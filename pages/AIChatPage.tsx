@@ -25,7 +25,7 @@ const AIChatPage: React.FC = () => {
     if (!user) return;
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.db
+      const { data, error } = await supabase
         .from('chat_history')
         .select('*')
         .eq('user_id', user.id)
@@ -66,7 +66,7 @@ const AIChatPage: React.FC = () => {
     setIsTyping(true);
 
     try {
-        await supabase.db.from('chat_history').insert({
+        await supabase.from('chat_history').insert({
             message: userMessage.message,
             sender: userMessage.sender,
             user_id: user?.id,
@@ -88,7 +88,7 @@ const AIChatPage: React.FC = () => {
             setMessages(prev => prev.map(msg => msg.id === aiMessageId ? {...msg, message: aiResponseText} : msg));
         }
 
-        await supabase.db.from('chat_history').insert({
+        await supabase.from('chat_history').insert({
             message: aiResponseText,
             sender: 'ai',
             user_id: user?.id,
