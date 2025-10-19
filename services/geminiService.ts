@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
 import { GroundingChunk } from '../types';
 
@@ -13,15 +12,11 @@ const ai = new GoogleGenAI({ apiKey: API_KEY! });
 const systemInstruction = "Kamu adalah 'Sehatin', asisten medis AI yang ramah dan informatif. Jawablah dalam Bahasa Indonesia dengan gaya edukatif, tidak memberi diagnosis pasti, dan selalu menyarankan konsultasi dengan tenaga medis profesional bila gejala serius.";
 
 export function createChatSession(): Chat {
-    const model = ai.getModel({
-        model: "gemini-2.5-flash",
-        systemInstruction: {
-            role: "model",
-            parts: [{ text: systemInstruction }],
+    return ai.chats.create({
+        model: 'gemini-2.5-flash',
+        config: {
+            systemInstruction: systemInstruction,
         },
-    });
-    return model.startChat({
-        history: [],
     });
 }
 
@@ -31,10 +26,9 @@ export async function analyzeHealthSymptoms(symptoms: string): Promise<string> {
     try {
         const response: GenerateContentResponse = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            systemInstruction: {
-                role: "model",
-                parts: [{ text: systemInstruction }],
+            contents: prompt,
+            config: {
+                systemInstruction: systemInstruction,
             },
         });
         return response.text;
@@ -57,7 +51,7 @@ export async function findNearbyHealthFacilities(
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: [{ role: "user", parts: [{ text: query }] }],
+            contents: query,
             config: {
                 tools: [{ googleMaps: {} }],
                 toolConfig: {

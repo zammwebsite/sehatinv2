@@ -1,13 +1,23 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
-import { User, Session } from '../types';
+import { User } from '../types';
 import { supabase } from '../services/supabaseService';
-// FIX: The mock service does not export 'Session'. Importing 'AuthChangeEvent' and using 'Session' from '../types' which is what the mock provides.
-import { AuthChangeEvent } from '../services/supabaseService'; // Use mock types
+import type { AuthChangeEvent, Session as SupabaseSession, User as SupabaseUser } from '@supabase/supabase-js';
+
+// Helper to transform Supabase user to our app's User type
+const transformSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
+  if (!supabaseUser) return null;
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email || '',
+    name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || '',
+    age: supabaseUser.user_metadata?.age || 0,
+    gender: supabaseUser.user_metadata?.gender || 'Other',
+  };
+};
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
+  session: SupabaseSession | null;
   loading: boolean;
   login: typeof supabase.auth.signInWithPassword;
   register: typeof supabase.auth.signUp;
@@ -17,7 +27,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<SupabaseSession | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,9 +35,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const { data, error } = await supabase.auth.getSession();
       if (error) throw error;
-      setSession(data.session as Session | null);
-      setUser(data.session?.user ?? null);
-    } catch (error) {
+      setSession(data.session);
+      setUser(transformSupabaseUser(data.session?.user ?? null));
+    } catch (error)      {
       console.error('Error getting session:', error);
     } finally {
       setLoading(false);
@@ -38,11 +48,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     getSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      // FIX: The mock's onAuthStateChange provides a session of type `Session` from `../types`, so we use that type directly.
-      (_event: AuthChangeEvent, session: Session | null) => {
-        // FIX: The type cast is no longer needed as the session type is now correct.
+      (_event: AuthChangeEvent, session: SupabaseSession | null) => {
         setSession(session);
-        setUser(session?.user ?? null);
+        setUser(transformSupabaseUser(session?.user ?? null));
         setLoading(false);
       }
     );

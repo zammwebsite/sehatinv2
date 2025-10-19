@@ -1,14 +1,19 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { User } from '../types';
+import { supabase } from '../services/supabaseService';
 
 const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<Partial<User>>(user || {});
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<Partial<User>>({
+    name: user?.name || '',
+    age: user?.age || undefined,
+    gender: user?.gender || 'Other',
+  });
 
   const handleLogout = async () => {
     await logout();
@@ -20,11 +25,23 @@ const ProfilePage: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    // In a real app, you would call a function to update the user profile in the database.
-    console.log("Saving data (mock):", formData);
-    setIsEditing(false);
-    // You might want to update the auth context user here as well.
+  const handleSave = async () => {
+    setIsSaving(true);
+    const { error } = await supabase.auth.updateUser({
+        data: { 
+            name: formData.name, 
+            age: formData.age ? parseInt(String(formData.age), 10) : null, 
+            gender: formData.gender 
+        }
+    });
+
+    if (error) {
+        alert("Gagal menyimpan profil: " + error.message);
+    } else {
+        // Listener onAuthStateChange di useAuth akan mengupdate state secara otomatis
+        setIsEditing(false);
+    }
+    setIsSaving(false);
   };
 
   if (!user) {
@@ -83,8 +100,8 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {isEditing && (
-            <button onClick={handleSave} className="w-full mt-4 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
-                Simpan Perubahan
+            <button onClick={handleSave} disabled={isSaving} className="w-full mt-4 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-green-400">
+                {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
             </button>
         )}
       </div>
