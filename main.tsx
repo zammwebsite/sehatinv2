@@ -1,20 +1,11 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import './index.css';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App"; // pastikan file App.tsx kamu ada di src/
 
-console.log("🔧 Sehatin App is mounting...");
+import "./index.css"; // kalau kamu pakai tailwind atau css
 
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  console.error("❌ Root element not found! Pastikan index.html memiliki <div id='root'></div>");
-} else {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
-}
-
-console.log("✅ Sehatin App mounted successfully");
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
