@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Style dasar agar tidak putih polos */
+body {
+  @apply bg-gray-50 text-gray-900;
+}
